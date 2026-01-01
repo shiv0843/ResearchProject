@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research — PrivacyGuard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-500: #6B4EEA;
+            --primary-600: #573ACD;
+            --primary-700: #422D99;
+            --text-900: #121212;
+            --text-600: #4a4a4a;
+            --text-300: #999999;
+            --background: #f7f9fc;
+            --surface: #ffffff;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --radius-xl: 32px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-900);
+            background: var(--background);
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            padding: 80px 0;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: var(--shadow-md);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+        }
+
+        .brand svg {
+            color: var(--primary-600);
+        }
+
+        .brand span {
+            font-size: 20px;
+        }
+
+        nav a {
+            color: var(--text-600);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--primary-600);
+            transform: translateY(-2px);
+        } 
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            align-items: center;
+        }
+
+        .page-hero {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+            color: #fff;
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .page-hero h1 {
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 0 0 16px;
+        }
+
+        .page-hero p {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .research-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        .fact-card {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid #e9e9e9;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .fact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .fact-card h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--primary-600);
+        }
+
+        .fact-card p {
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--text-600);
+            margin-bottom: 0;
+        }
+
+        .cta-button {
+            display: block;
+            width: fit-content;
+            margin: 60px auto 0;
+            padding: 16px 32px;
+            background: linear-gradient(180deg, var(--primary-500), var(--primary-700));
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            border-radius: 14px;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        @media(max-width: 600px) {
+            nav {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .page-hero {
+                padding: 80px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <nav>
+            <div class="brand">
+                <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M24 3.5l16.97 9.8v21.4L24 44.5 7.03 34.7V13.3L24 3.5z" stroke="currentColor" stroke-width="2.6"/>
+                    <path d="M24 11c4.7 2.7 8.3 2.7 8.3 2.7V24c0 6.7-5.5 10.6-8.3 11.9C21.2 34.6 15.7 30.7 15.7 24V13.7S19.3 13.7 24 11z" stroke="currentColor" stroke-width="2.2"/>
+                </svg>
+                <span>PrivacyGuard</span>
+            </div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/about">About</a>
+                <a href="/research" class="active">Research</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </nav>
+    </div>
+</header>
+<main>
+    <section class="page-hero">
+        <div class="container">
+            <h1>Our Research & Insights</h1>
+            <p>Our work is founded on a commitment to understanding the evolving landscape of digital privacy through ongoing research and data analysis.</p>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="research-grid">
+                <div class="fact-card">
+                    <h3>Excessive Permissions</h3>
+                    <p>Our studies show that over 80% of free apps request permissions beyond what is functionally necessary. This often includes access to the microphone and camera for apps that have no apparent need for them, raising significant security concerns.</p>
+                </div>
+                <div class="fact-card">
+                    <h3>Hidden Trackers</h3>
+                    <p>We've discovered that many popular apps, particularly those in the social media and gaming categories, contain hidden third-party trackers. These trackers silently collect user data, behavior, and demographics for targeted advertising and data brokers.</p>
+                </div>
+                <div class="fact-card">
+                    <h3>Background Data Collection</h3>
+                    <p>A surprising number of applications continue to access and transmit data in the background even when not in active use. This can include location data, device identifiers, and contact lists, which can lead to privacy leaks if not properly monitored.</p>
+                </div>
+                <div class="fact-card">
+                    <h3>App-to-App Communication</h3>
+                    <p>Our research into inter-app communication shows that many apps share data with each other without explicit user consent. A simple utility app, for instance, might be able to read data from a messaging app, creating a potential backdoor for data breaches.</p>
+                </div>
+            </div>
+            <a href="#" class="cta-button">Download Our Latest Report</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

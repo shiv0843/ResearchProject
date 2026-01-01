@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PrivacyGuard — Analyze Your Apps</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --blue-600:#1e68ff;
+      --blue-700:#0d5bd2;
+      --blue-500:#2f7dff;
+      --text:#0b1220;
+      --muted:#667085;
+      --card:#ffffff;
+      --bg:#f5f7fb;
+      --shadow:0 10px 30px rgba(18, 66, 180, .15);
+      --radius-xl:28px;
+      --radius-lg:20px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,sans-serif; color:var(--text);
+      background:var(--bg);
+    }
+
+    /* Header */
+header{
+  position:sticky; top:0; z-index:30;
+  backdrop-filter:saturate(140%) blur(8px);
+  background:rgba(255,255,255,0.85); /* light translucent taskbar */
+  box-shadow:0 2px 6px rgba(0,0,0,0.05); /* small shadow to separate from background */
+}
+
+    nav{
+      max-width:1180px; margin:0 auto; padding:18px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      color:#0e0e0e;
+    }
+    .brand{display:flex; align-items:center; gap:12px; font-weight:700}
+    .brand span{font-size:20px}
+    nav a{color:#010101; text-decoration:none; font-weight:500; opacity:.95}
+    .nav-links{display:flex; gap:28px; align-items:center}
+
+    /* Hero */
+    .hero{
+      background: linear-gradient(160deg, var(--blue-600), var(--blue-700));
+      color:#fff; padding:80px 20px 100px;
+    }
+    .hero-inner{
+      max-width:1180px; margin:0 auto;
+      display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;
+    }
+    .headline{font-weight:800; line-height:1.05; font-size: clamp(36px, 5vw, 56px); margin:0 0 16px}
+    .subhead{color:rgba(255,255,255,.92); font-size:18px; margin:0 0 28px}
+
+    /* Upload card */
+    .upload-card{
+      background:var(--card); border-radius:var(--radius-xl); box-shadow:var(--shadow);
+      padding:34px; text-align:center;
+    }
+    .cloud{
+      width:64px; height:64px; margin:0 auto 14px;
+      border-radius:14px; display:grid; place-items:center;
+      background:linear-gradient(180deg,var(--blue-500),var(--blue-600)); color:#fff;
+    }
+    .upload-card h3{margin:8px 0 6px; font-size:22px; font-weight:700}
+    .upload-card p{color:var(--muted); font-size:14px; margin:6px 0 14px}
+    .btn-choose{
+      background:linear-gradient(180deg,var(--blue-600),var(--blue-700));
+      border:none; color:white; padding:12px 22px; border-radius:10px; font-weight:600; cursor:pointer;
+      box-shadow:0 6px 18px rgba(30,115,232,0.25);
+    }
+    .or{margin:14px 0; color:var(--muted); font-size:13px; font-weight:600}
+    .select-list{
+      border:1px solid #e6eefc; padding:14px 18px; border-radius:999px; background:#fbfdff;
+      display:flex; align-items:center; justify-content:space-between;
+      font-weight:500; cursor:pointer;
+    }
+
+    /* Shield illustration */
+    .shield-card{
+      height:360px; border-radius:34px; border:2px solid rgba(255,255,255,.35);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      display:grid; place-items:center;
+    }
+    .shield-card svg{opacity:.95; filter:drop-shadow(0 8px 18px rgba(13,91,210,.25))}
+
+    /* Risk cards */
+    .section{padding:60px 20px}
+    .container{max-width:1180px; margin:0 auto}
+    .cards{display:grid; grid-template-columns:repeat(3,1fr); gap:26px}
+    .card{
+      background:#fff; border-radius:var(--radius-lg); padding:28px;
+      box-shadow:0 8px 24px rgba(16,24,40,.06); text-align:center;
+    }
+    .icon{width:56px; height:56px; border-radius:50%; display:grid; place-items:center; margin:0 auto 12px}
+    .icon.red{background:#ffe9ea}
+    .icon.orange{background:#fff1e5}
+    .icon.green{background:#e9fff1}
+    .card h3{margin:6px 0 8px; font-size:20px; font-weight:700}
+    .card p{color:var(--muted); font-size:14px; margin:0}
+
+    /* Info panels */
+    .info{margin-top:50px; display:grid; grid-template-columns:1fr 1fr; gap:26px}
+    .panel{background:#fff; padding:26px; border-radius:var(--radius-lg); box-shadow:0 8px 24px rgba(16,24,40,.05)}
+    .panel h3{margin:0 0 10px}
+    .panel p{color:var(--muted); margin:0}
+
+    /* Responsive */
+    @media(max-width:980px){
+      .hero-inner{grid-template-columns:1fr; text-align:center}
+      .shield-card{height:280px}
+      .cards{grid-template-columns:1fr}
+      .info{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav>
+      <div class="brand">
+        <!-- ✅ Updated Logo -->
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 3.5l16.97 9.8v21.4L24 44.5 7.03 34.7V13.3L24 3.5z" stroke="#1e68ff" stroke-width="2.6"/>
+          <path d="M24 11c4.7 2.7 8.3 2.7 8.3 2.7V24c0 6.7-5.5 10.6-8.3 11.9C21.2 34.6 15.7 30.7 15.7 24V13.7S19.3 13.7 24 11z" stroke="#0d5bd2" stroke-width="2.2"/>
+        </svg>
+        <span>PrivacyGuard</span>
+      </div>
+      <div class="nav-links">
+        <a href="#">Home</a>
+        <a href="#">About</a>
+        <a href="#">Research</a>
+        <a href="#">Contact</a>
+      </div>
+    </nav>
+</header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div>
+        <h1 class="headline">Analyze Your Apps.<br/>Protect Your Privacy.</h1>
+        <p class="subhead">Upload your installed app list and discover which apps are spying on you.</p>
+        <div class="upload-card">
+          <div class="cloud">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 16H8a4 4 0 010-8 5 5 0 019 1 3.5 3.5 0 01-1 6z" fill="white"/></svg>
+          </div>
+          <h3>Drag & Drop</h3>
+          <p>Upload your app list (JSON / CSV) to analyze permissions.</p>
+          <button class="btn-choose">Choose File</button>
+          <div class="or">OR</div>
+          <div class="select-list">Select apps from list <span>▾</span></div>
+        </div>
+      </div>
+      <div class="shield-card">
+        <svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 20c27 15 48 15 48 15v68c0 45-37 71-48 76-11-5-48-31-48-76V35s21 0 48-15z" stroke="#a6ccff" stroke-width="6"/>
+          <rect x="83" y="94" width="34" height="28" rx="6" stroke="#cfe2ff" stroke-width="6"/>
+          <path d="M90 90v-6a10 10 0 0120 0v6" stroke="#cfe2ff" stroke-width="6"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Risk Cards -->
+  <section class="section">
+    <div class="container">
+      <div class="cards">
+        <div class="card">
+          <div class="icon red">
+            <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#ff5252" stroke-width="2"/><path d="M12 7v6" stroke="#ff5252" stroke-width="2"/><circle cx="12" cy="16" r="1.2" fill="#ff5252"/></svg>
+          </div>
+          <h3>High Risk</h3>
+          <p>Apps with extensive permissions and data collection</p>
+        </div>
+        <div class="card">
+          <div class="icon orange">
+            <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#ff9f3d" stroke-width="2"/><path d="M8 12h8" stroke="#ff9f3d" stroke-width="2"/></svg>
+          </div>
+          <h3>Medium Risk</h3>
+          <p>Apps with moderate permissions and data collection</p>
+        </div>
+        <div class="card">
+          <div class="icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#27c07d" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#27c07d" stroke-width="2"/></svg>
+          </div>
+          <h3>Low Risk</h3>
+          <p>Apps with minimal permissions and data collection</p>
+        </div>
+      </div>
+
+      <div class="info">
+        <div class="panel">
+          <h3>Did you know?</h3>
+          <p>76% of social media apps request unnecessary location and background access which may lead to privacy leaks.</p>
+        </div>
+        <div class="panel">
+          <h3>How it works</h3>
+          <p>Upload your installed apps list and our analyzer reports permissions, trackers and potential privacy risks in seconds.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

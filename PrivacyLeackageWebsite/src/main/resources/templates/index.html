@@ -1,0 +1,688 @@
+<!-- src/main/resources/templates/index.html (updated only to compute percentages and show dominant color box) -->
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PrivacyGuard — Analyze Your Apps</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --max-w:1180px;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --muted:#667085;
+      --accent:#1e68ff;
+      --radius:14px;
+      --shadow:0 12px 30px rgba(18,66,180,0.06);
+
+      /* NEW COLORS FOR PERMISSIONS */
+      --perm-safe:#e7fff1;
+      --perm-risky:#fff3f3;
+      --perm-neutral:#f3f6ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background:var(--bg);
+      color:#0b1220;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .page { max-width: var(--max-w); margin: 26px auto; padding: 0 18px 60px; }
+    header nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .brand { font-weight:800; font-size:20px; }
+    .nav-links a { margin-left:16px; text-decoration:none; color:inherit; font-weight:600; opacity:.85; }
+    .nav-links a.active { color:var(--accent); opacity:1; }
+
+    .hero {
+      background: linear-gradient(160deg,var(--accent),#0d5bd2);
+      border-radius:18px;
+      color:#fff;
+      padding:22px;
+      box-shadow:var(--shadow);
+      display:flex;
+      gap:18px;
+      align-items:center;
+      margin-bottom:22px;
+    }
+    .hero .left { flex:1; }
+    .headline { font-size:clamp(20px,3.2vw,28px); margin:0 0 8px; font-weight:800; line-height:1.05;}
+    .subhead { margin:0 0 12px; color: rgba(255,255,255,0.88); font-size:14px; }
+
+    .upload-card {
+      margin-top:8px;
+      background:rgba(255,255,255,0.06);
+      padding:12px;
+      border-radius:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn-choose { background:rgba(255,255,255,0.15); color:#fff; padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:700; border:1px solid rgba(255,255,255,0.06); }
+    .btn-submit { background:#fff; color:var(--accent); padding:8px 14px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+    .file-name { background:rgba(255,255,255,0.06); padding:8px 12px; border-radius:10px; color:#fff; font-weight:600; min-width:160px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+    .hero .right { width:240px; display:flex; justify-content:center; align-items:center; }
+    .shield { width:160px; filter:drop-shadow(0 8px 20px rgba(13,91,210,0.12)); }
+
+    .results-wrapper {
+      margin-top:20px;
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+
+    .summary-grid { display:grid; grid-template-columns: 1fr 360px; gap:16px; align-items:start; }
+
+    .metrics { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .metric { background:#fbfdff; border-radius:12px; padding:12px; min-width:120px; box-shadow:0 6px 18px rgba(18,66,180,0.03); }
+    .metric .num { font-weight:800; font-size:20px; }
+    .small-muted { color:var(--muted); font-size:13px; }
+
+    /* Updated donut card style to allow for centering a message */
+    .donut-card {
+      background:#fff;
+      border-radius:12px;
+      padding:12px;
+      height:220px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      box-shadow:0 6px 20px rgba(18,66,180,0.03);
+      position: relative; /* Added for absolute positioning of canvas/message */
+    }
+    /* Ensure canvas takes full space */
+    .donut-card canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .donut-legend { display:flex; gap:10px; margin-top:8px; align-items:center; font-size:13px; color:var(--muted); }
+
+    .results-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:14px; margin-top:16px; }
+
+    /* Updated app-card for bolder look */
+    .app-card {
+      background:linear-gradient(180deg, #fff, #fbfdff);
+      border-radius:12px;
+      padding:16px;
+      box-shadow:0 8px 26px rgba(18,66,180,0.04);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-height:120px;
+    }
+
+    .app-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .app-title { font-weight:800; font-size:15px; }
+    .badge { padding:6px 10px; border-radius:999px; font-weight:800; font-size:13px; }
+    .badge.high { background:rgba(255,99,99,0.12); color:#c00; }
+    .badge.medium { background:rgba(255,165,0,0.10); color:#c86; }
+    .badge.low { background:rgba(60,200,120,0.10); color:#2a8f56; }
+
+    /* NEW: Risk Percentage Display */
+    .risk-percentage {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .risk-percentage.high { color: #c00; }
+    .risk-percentage.medium { color: #c86; }
+    .risk-percentage.low { color: #2a8f56; }
+
+
+    .perm-pills { display:flex; gap:6px; flex-wrap:wrap; }
+
+    /* NEW: Permission Pills for good/bad classification */
+    .perm-pill {
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:12px;
+      color:#133;
+      background:var(--perm-neutral); /* Default neutral */
+    }
+    /* Global top perms pill color */
+    .results-wrapper .perm-pill {
+        background: #f3f6ff;
+        color: #133;
+    }
+    /* Specific app-card pill colors */
+    .app-card .perm-pill.safe {
+      background:var(--perm-safe);
+      color:#2a8f56;
+    }
+    .app-card .perm-pill.risky {
+      background:var(--perm-risky);
+      color:#c00;
+    }
+
+
+    details summary { cursor:pointer; color:var(--muted); outline:none; }
+    details[open] summary { color:#0b1220; font-weight:700; }
+
+    /* small features row and how-it-works */
+    .features { display:flex; gap:12px; margin-top:18px; flex-wrap:wrap; }
+    .feature-card { background:#fff; border-radius:12px; padding:12px; min-width:220px; box-shadow:0 8px 18px rgba(18,66,180,0.03); display:flex; gap:10px; align-items:flex-start; }
+    .feature-icon { width:42px; height:42px; border-radius:10px; background:linear-gradient(180deg,var(--accent),#0d5bd2); color:#fff; display:grid; place-items:center; font-weight:800; }
+    .feature-title { font-weight:800; font-size:14px; margin-bottom:4px; }
+
+    .how { margin-top:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+    .step { background:#fff; padding:10px 12px; border-radius:10px; box-shadow:0 6px 14px rgba(18,66,180,0.03); min-width:180px; }
+    .step .num { font-weight:800; color:var(--accent); margin-bottom:6px; }
+
+    /* Call to action section style */
+    .cta-section {
+      margin-top: 36px;
+      padding: 30px 20px;
+      background: linear-gradient(140deg, #ffffff 60%, var(--bg));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      text-align: center;
+      border: 1px solid #e7ebf2;
+    }
+    .cta-section h2 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .cta-btn {
+      display: inline-block;
+      background:var(--accent);
+      color:#fff;
+      padding:10px 24px;
+      border-radius:10px;
+      text-decoration:none;
+      font-weight:700;
+      margin-top:15px;
+      transition: background 0.2s;
+    }
+    .cta-btn:hover {
+      background: #0d5bd2;
+    }
+
+    /* Styles for the new content sections */
+    .section-head {
+      font-weight: 800;
+      font-size: 18px;
+      margin: 24px 0 14px;
+      color: #0b1220;
+      padding-top: 10px;
+      border-top: 1px solid #e7ebf2;
+    }
+
+    .recommendation-card {
+        background: #fbfdff;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid #eff3ff;
+    }
+    .recommendation-card h3 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--accent);
+    }
+    .recommendation-card.high-risk h3 { color: #c00; }
+    .recommendation-card.medium-risk h3 { color: #c86; }
+    .recommendation-card p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    /* Fallback message for empty chart */
+    .chart-fallback-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 80%;
+        font-size: 13px;
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+    /* DOMINANT BOX (new) */
+    .dominant-box {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid #eee;
+      box-shadow: 0 6px 18px rgba(18,66,180,0.03);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      z-index: 5;
+      min-width: 120px;
+      justify-content: center;
+      font-weight:800;
+    }
+    .dominant-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:8px; }
+
+    footer { margin-top:18px; color:var(--muted); font-size:13px; text-align:center; }
+
+    @media (max-width:980px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      .hero { flex-direction:column; gap:12px; align-items:flex-start; }
+      .hero .right { width:100%; display:flex; justify-content:flex-end; }
+      .donut-card { height:200px; }
+      .app-card { padding: 14px; }
+      .dominant-box { position: static; margin-top: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <nav>
+      <div class="brand">🔒 PrivacyGuard</div>
+      <div class="nav-links">
+        <a href="/" class="active">Home</a>
+        <a href="/about">About</a>
+        <a href="/research">Research</a>
+        <a href="/contact">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero" role="region" aria-label="Upload apps">
+    <div class="left">
+      <h1 class="headline">Analyze Your Apps. Protect Your Privacy.</h1>
+      <p class="subhead">Upload your installed app list (.csv or .json). We'll scan permissions and show a clear risk summary.</p>
+
+      <div class="upload-card" aria-hidden="false">
+        <form method="POST" th:action="@{/analyze}" enctype="multipart/form-data" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <label for="filePicker" id="chooseBtn" class="btn-choose" role="button" tabindex="0">Choose file</label>
+          <div id="fileName" class="file-name" aria-live="polite">No file chosen</div>
+          <input type="file" id="filePicker" name="file" accept=".json,.csv" style="display:none" required>
+          <button type="submit" class="btn-submit">Analyze</button>
+        </form>
+      </div>
+
+      <div class="features" aria-hidden="false">
+        <div class="feature-card">
+          <div class="feature-icon">P</div>
+          <div>
+            <div class="feature-title">Privacy Score</div>
+            <div class="small-muted">Quick grade for each app based on permissions.</div>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">T</div>
+          <div>
+            <div class="feature-title">Trackers</div>
+            <div class="small-muted">Detects known analytics & advertising trackers.</div>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">R</div>
+          <div>
+            <div class="feature-title">Recommendations</div>
+            <div class="small-muted">Simple actions you can take to reduce risk.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="how" aria-hidden="false">
+        <div class="step">
+          <div class="num">1</div>
+          <div class="small-muted">Upload app list (.csv or .json)</div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div class="small-muted">We analyze permissions & trackers</div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div class="small-muted">Get clear risk cards and suggestions</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <img class="shield" src="/img/shield.png" alt="shield illustration">
+    </div>
+  </section>
+
+  <section class="cta-section" aria-label="Why analyze your apps">
+    <h2>Take Control of Your Digital Life</h2>
+    <p style="max-width:680px; margin:0 auto 15px; color:var(--muted); font-size:15px;">
+      Understanding app permissions is the first step toward genuine digital privacy. Many apps silently collect data far beyond what they need. Our tool gives you the transparency you deserve in a clear, actionable format.
+    </p>
+
+    <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:20px;">
+      <div style="max-width:300px; text-align:left;">
+        <h3 style="font-size:16px; font-weight:700; margin-bottom:5px;">🔍 Deep Analysis</h3>
+        <p class="small-muted">We go beyond simple names, checking known tracker libraries and cross-referencing permissions with common misuse patterns.</p>
+      </div>
+      <div style="max-width:300px; text-align:left;">
+        <h3 style="font-size:16px; font-weight:700; margin-bottom:5px;">🛡️ Industry Standard</h3>
+        <p class="small-muted">Our risk scoring is based on established privacy frameworks, prioritizing data access permissions like Location, Camera, and Contacts.</p>
+      </div>
+    </div>
+    <a href="/about" class="cta-btn">Learn More About Our Methodology</a>
+  </section>
+  <div class="results-wrapper" th:if="${results != null}">
+    <div class="summary-grid">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <div class="small-muted">Analysis Summary</div>
+            <div style="font-weight:800; font-size:18px;">Overview</div>
+          </div>
+          <div class="small-muted">Total Apps Analyzed: <strong th:text="${total}">0</strong></div>
+        </div>
+
+        <div class="metrics" aria-hidden="false">
+          <div class="metric">
+            <div class="small-muted">High risk</div>
+            <div class="num" th:with="highCount=${counts != null ? counts['High'] : 0}">
+              <th:block th:if="${total > 0}" th:text="${#numbers.formatDecimal((highCount * 100.0) / total, 0, 0)} + '%'">0%</th:block>
+              <th:block th:unless="${total > 0}">0%</th:block>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="small-muted">Medium risk</div>
+            <div class="num" th:with="mediumCount=${counts != null ? counts['Medium'] : 0}">
+              <th:block th:if="${total > 0}" th:text="${#numbers.formatDecimal((mediumCount * 100.0) / total, 0, 0)} + '%'">0%</th:block>
+              <th:block th:unless="${total > 0}">0%</th:block>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="small-muted">Low risk</div>
+            <div class="num" th:with="lowCount=${counts != null ? counts['Low'] : 0}">
+              <th:block th:if="${total > 0}" th:text="${#numbers.formatDecimal((lowCount * 100.0) / total, 0, 0)} + '%'">0%</th:block>
+              <th:block th:unless="${total > 0}">0%</th:block>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="small-muted">Skipped rows</div>
+            <div class="num" th:text="${skippedCount}">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="donut-card" role="img" aria-label="Risk distribution">
+        <!-- DOMINANT BOX: shows which risk is dominant and colored -->
+        <div id="dominantBox" class="dominant-box" style="display:none;">
+          <span id="dominantDot" class="dominant-dot" style="background:#c00;"></span>
+          <span id="dominantText">Dominant</span>
+        </div>
+
+        <canvas id="riskDonut" width="220" height="220" aria-hidden="false"></canvas>
+        <th:block th:if="${total == 0 and skippedCount == 0}">
+          <div class="chart-fallback-message">
+            Upload your app list to see the risk distribution here.
+          </div>
+        </th:block>
+        <div class="donut-legend">
+          <div style="display:flex; gap:6px; align-items:center;"><span style="width:10px;height:10px;background:#c00;border-radius:2px;display:inline-block"></span> High</div>
+          <div style="display:flex; gap:6px; align-items:center;"><span style="width:10px;height:10px;background:#c86;border-radius:2px;display:inline-block"></span> Medium</div>
+          <div style="display:flex; gap:6px; align-items:center;"><span style="width:10px;height:10px;background:#2a8f56;border-radius:2px;display:inline-block"></span> Low</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;">
+      <div class="small-muted" style="margin-bottom:8px;">Top permissions (across all apps)</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <th:block th:if="${topGlobalPerms != null and !#maps.isEmpty(topGlobalPerms)}">
+          <span th:each="e : ${topGlobalPerms.entrySet()}" class="perm-pill" th:text="${e.key} + ' (' + e.value + ')'">Permission</span>
+        </th:block>
+        <span th:if="${topGlobalPerms == null or #maps.isEmpty(topGlobalPerms)}" class="small-muted">No top permissions found in the list.</span>
+      </div>
+    </div>
+
+    <h2 class="section-head">🛡️ Privacy Recommendations</h2>
+    <div style="margin-top:12px;">
+
+      <div class="recommendation-card high-risk">
+        <h3 th:text="${counts != null && counts['High'] > 0} ? 'Immediate Action: Review ' + ${counts['High']} + ' High-Risk Apps' : 'Great Job! No High-Risk Apps Found.'">
+          Immediate Action: Review High-Risk Apps
+        </h3>
+        <p th:text="${counts != null && counts['High'] > 0} ? 'Focus on the apps marked RED below. They request critical permissions (Camera, Location, Contacts) and/or contain aggressive trackers. Consider uninstalling or revoking permissions immediately.' : 'Your risk exposure is low. Continue monitoring for critical permissions in the future.'">
+          Focus on the apps marked RED below...
+        </p>
+      </div>
+
+      <div class="recommendation-card medium-risk">
+        <h3 th:text="${counts != null && counts['Medium'] > 0} ? 'Take Action: Inspect ' + ${counts['Medium']} + ' Medium-Risk Apps' : 'Keep it up! Zero Medium-Risk Apps.'">
+          Take Action: Inspect Medium-Risk Apps
+        </h3>
+        <p th:text="${counts != null && counts['Medium'] > 0} ? 'These apps have permissions or trackers that could be intrusive. Review them to ensure they genuinely need that level of access for their core function. Try using privacy-focused alternatives.' : 'Medium risk is well managed. Focus on being mindful of future app installs.'">
+          These apps have permissions or trackers that could be intrusive...
+        </p>
+      </div>
+
+      <div class="recommendation-card">
+        <h3>General Review: Low Risk Apps</h3>
+        <p>
+          Low-risk apps usually request standard permissions. However, it's always wise to check the "Show all permissions" section on each card to confirm no unnecessary background access is granted.
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-head">🔍 Common High-Risk Permissions Guide</h2>
+    <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
+      <div class="feature-card" style="min-width: 200px; padding: 10px;">
+        <div class="feature-icon" style="background: #c00;">L</div>
+        <div>
+          <div class="feature-title">ACCESS_FINE_LOCATION</div>
+          <div class="small-muted">Allows continuous, precise location tracking. Highest risk for non-map/weather apps.</div>
+        </div>
+      </div>
+      <div class="feature-card" style="min-width: 200px; padding: 10px;">
+        <div class="feature-icon" style="background: #c00;">M</div>
+        <div>
+          <div class="feature-title">RECORD_AUDIO / CAMERA</div>
+          <div class="small-muted">Allows app to secretly record using the mic/camera when running in the background.</div>
+        </div>
+      </div>
+      <div class="feature-card" style="min-width: 200px; padding: 10px;">
+        <div class="feature-icon" style="background: #c86;">C</div>
+        <div>
+          <div class="feature-title">READ_CONTACTS</div>
+          <div class="small-muted">Uploads your entire address book. Often used for social networking or advertising.</div>
+        </div>
+      </div>
+      <div class="feature-card" style="min-width: 200px; padding: 10px;">
+        <div class="feature-icon" style="background: #c86;">F</div>
+        <div>
+          <div class="feature-title">READ/WRITE_EXTERNAL_STORAGE</div>
+          <div class="small-muted">Full access to files and media on your device. Could read sensitive documents.</div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-head">📊 Detailed App Results</h2>
+    <div class="results-grid" style="margin-top:18px;">
+      <div class="app-card" th:each="result : ${results}" th:if="${results != null}">
+        <div class="app-head">
+          <div>
+            <div class="app-title" th:text="${result.appName}">App Name</div>
+            <div class="small-muted" th:text="${result.packageName}">com.example.app</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="risk-percentage"
+                 th:classappend="${result.riskLevel=='High'} ? ' high' : ${result.riskLevel=='Medium'} ? ' medium' : ' low'"
+                 th:text="${result.riskPercent} + '%'">
+              55%
+            </div>
+            <div class="small-muted">Risk Score</div>
+          </div>
+        </div>
+
+        <div style="margin-top: -10px; margin-bottom: 5px; text-align:right;">
+          <span class="badge" th:classappend="${result.riskLevel=='High'} ? ' high' : ${result.riskLevel=='Medium'} ? ' medium' : ' low'" th:text="${result.riskLevel}">Risk Level</span>
+        </div>
+
+        <div th:text="${result.reason}" class="small-muted">Reason summary: Uses microphone and contacts without obvious need.</div>
+
+        <div th:if="${result.permissionWeights != null}">
+          <div class="small-muted" style="margin-bottom:6px;">Top Permissions Breakdown</div>
+          <div class="perm-pills">
+            <span class="perm-pill"
+                  th:each="p : ${result.permissionWeights.entrySet()}"
+                  th:text="${p.key + ' (' + p.value + ')'}"
+                  th:classappend="${result.permissionPercent[p.key] >= 40} ? ' risky' : ( ${result.permissionPercent[p.key] >= 15} ? ' neutral' : ' safe' )">perm</span>
+            <span th:if="${#maps.isEmpty(result.permissionWeights)}" class="small-muted">No top permissions to display.</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="small-muted">Trackers Detected</div>
+          <div class="perm-pills" style="margin-top:6px;">
+            <span class="perm-pill risky" th:each="t : ${result.trackers}" th:text="${t}">tracker</span>
+            <span th:if="${result.trackers == null || #lists.isEmpty(result.trackers)}" class="small-muted">None (Great!)</span>
+          </div>
+        </div>
+
+        <details>
+          <summary>Show all permissions</summary>
+          <div style="margin-top:8px;">
+            <div th:if="${result.allPermissions != null}">
+              <span class="perm-pill"
+                    th:each="p : ${result.allPermissions}"
+                    th:text="${p}"
+                    th:classappend="${#strings.containsIgnoreCase(p,'camera') || #strings.containsIgnoreCase(p,'location') || #strings.containsIgnoreCase(p,'contacts') || #strings.containsIgnoreCase(p,'record') } ? ' risky' : ''">permission</span>
+            </div>
+            <div th:if="${result.allPermissions == null}" class="small-muted">No permissions listed</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div style="margin-top:18px;">© 2025 PrivacyGuard — Research &amp; Awareness. Built for clarity.</div>
+  </footer>
+</div>
+
+<script th:inline="javascript">
+  /*<![CDATA[*/
+  (function(){
+    try{
+      // raw counts from the server
+      var high = [[${counts != null ? counts['High'] : 0}]];
+      var med  = [[${counts != null ? counts['Medium'] : 0}]];
+      var low  = [[${counts != null ? counts['Low'] : 0}]];
+      var total = [[${total}]];
+
+      const ctx = document.getElementById('riskDonut').getContext('2d');
+      if (window._privacyChart && window._privacyChart.destroy) window._privacyChart.destroy();
+      window._privacyChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['High','Medium','Low'],
+          datasets: [{
+            data: [high, med, low],
+            // NOTE: Background and border colors must match the static legend colors
+            backgroundColor: ['rgba(255,99,99,0.18)','rgba(255,165,0,0.14)','rgba(60,200,120,0.14)'],
+            borderColor: ['#c00','#c86','#2a8f56'],
+            borderWidth:1
+          }]
+        },
+        options: {
+          responsive:true,
+          maintainAspectRatio:false,
+          cutout: '65%',
+          plugins: { legend: { display:false } }
+        }
+      });
+
+      // compute percentages (safe from division by zero)
+      var highPct = 0, medPct = 0, lowPct = 0;
+      if (total && total > 0) {
+        highPct = Math.round((high * 100) / total);
+        medPct  = Math.round((med  * 100) / total);
+        lowPct  = Math.round((low  * 100) / total);
+      }
+
+      // determine dominant risk (highest percentage). Tie-breaking: High > Medium > Low
+      var dominant = 'None';
+      var dominantColor = '#ddd';
+      if (highPct >= medPct && highPct >= lowPct && highPct > 0) {
+        dominant = 'High';
+        dominantColor = '#c00';
+      } else if (medPct >= highPct && medPct >= lowPct && medPct > 0) {
+        dominant = 'Medium';
+        dominantColor = '#c86';
+      } else if (lowPct >= highPct && lowPct >= medPct && lowPct > 0) {
+        dominant = 'Low';
+        dominantColor = '#2a8f56';
+      }
+
+      // show dominant box on the right side of donut-card
+      var domBox = document.getElementById('dominantBox');
+      var domText = document.getElementById('dominantText');
+      var domDot  = document.getElementById('dominantDot');
+      if (domBox && domText && domDot) {
+        if (dominant === 'None') {
+          domBox.style.display = 'none';
+        } else {
+          domBox.style.display = 'flex';
+          domText.textContent = dominant + ' (' + (dominant === 'High' ? highPct : (dominant === 'Medium' ? medPct : lowPct)) + '%)';
+          domDot.style.background = dominantColor;
+          // slightly tint the box border to match
+          domBox.style.borderColor = dominantColor + '33';
+        }
+      }
+    }catch(e){ console.warn('chart error', e); }
+  })();
+  /*]]>*/
+</script>
+
+<script>
+  // Ensure single-click file open works reliably across browsers.
+  document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('filePicker');
+    const fileName = document.getElementById('fileName');
+    const chooseBtn = document.getElementById('chooseBtn');
+
+    if (!input || !fileName || !chooseBtn) return;
+
+    // If user activates label (keyboard or mouse), prevent default behaviour and explicitly open file picker.
+    chooseBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      input.click();
+    });
+
+    // also support keyboard activation on Enter/Space
+    chooseBtn.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+
+    input.addEventListener('change', function () {
+      if (!input.files || input.files.length === 0) {
+        fileName.textContent = "No file chosen";
+        return;
+      }
+      const f = input.files[0];
+      const sizeKB = Math.round(f.size / 1024);
+      fileName.textContent = `${f.name} (${sizeKB} KB)`;
+    });
+  });
+</script>
+</body>
+</html>
