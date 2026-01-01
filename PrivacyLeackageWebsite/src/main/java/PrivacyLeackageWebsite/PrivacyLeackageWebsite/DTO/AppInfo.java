@@ -21,3 +21,6 @@ public class AppInfo {
     public List<String> getTrackers() { return trackers; }
     public void setTrackers(List<String> trackers) { this.trackers = trackers; }
 }
+
+
+//Comments
